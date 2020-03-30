@@ -1,15 +1,13 @@
+# SPDX-License-Identifier: LGPL-3.0-only
 module TypeParsers
 
-abstract type AbstractTypeParser end
-abstract type AbstractTypeValidator end
-name(v::AbstractTypeValidator) = v.name
-
-struct TypeParser{TValidator <: AbstractTypeValidator} <: AbstractTypeParser
+struct TypeParser{TValidator}
     validator::TValidator
 end
 validator(parser::TypeParser) = parser.validator
+name(validator) = validator.name
 
-struct RegexValidator <: AbstractTypeValidator
+struct RegexValidator
     name::String
     regex::Regex
 end
@@ -21,24 +19,22 @@ const modulenamevalidator = RegexValidator("Modulename", r"^([\w]+.)*[\w]+$")
 
 validate(validator::RegexValidator, str::AbstractString) = occursin(validator.regex, str)
 
-struct EvilTypeValidator <: AbstractTypeValidator
-    name::String
-end
+struct EvilTypeValidator end
+name(::EvilTypeValidator) = "Evil"
 validate(validator::EvilTypeValidator, str::AbstractString) = true
 
-const evil = EvilTypeValidator("Evil")
+const evil = EvilTypeValidator()
 
-function parsetype(parser::TypeParser{TValidator}, str::AbstractString, modulename::Union{AbstractString,Nothing}=nothing)::Type where TValidator
-    if !isnothing(modulename) && !validate(modulenamevalidator, modulename)
+function parsetype(parser::TypeParser{TValidator}, str::AbstractString, modulename::Union{AbstractString,Nothing} = nothing)::Type where TValidator
+    isnothing(modulename) || validate(modulenamevalidator, modulename) ||
         throw(ArgumentError("$modulename is not a valid module name"))
-    end
-    if !validate(parser.validator, str)
-        throw(ArgumentError("$str is not a valid type according to the '$(name(parser.validator))' validator"))
-    end
+    validate(validator(parser), str) ||
+        throw(ArgumentError("$str is not a valid type according to the '$(name(validator(parser)))' validator"))
+
     fullname = isnothing(modulename) ? "$str" : "$modulename.$str"
     return eval(Meta.parse(fullname))
 end
 
-export AbstractTypeValidator, TypeParser, strict, parametric, loose, evil, RegexValidator, validate, parsetype
+export TypeParser, parsetype, strict, parametric, loose, RegexValidator, name, validate, evil
 
 end
