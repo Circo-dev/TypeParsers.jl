@@ -1,5 +1,7 @@
 # TypeParsers
 
+[![Build Status](https://travis-ci.com/Circo-dev/TypeParsers.jl.svg?branch=master)](https://travis-ci.com/Circo-dev/TypeParsers.jl)
+
 Parse strings to types securely or insecurely.
 
 ## Motivation
