@@ -19,9 +19,18 @@ const modulenamevalidator = RegexValidator("Modulename", r"^([\w]+.)*[\w]+$")
 
 validate(validator::RegexValidator, str::AbstractString) = occursin(validator.regex, str)
 
-struct EvilTypeValidator end
+mutable struct EvilTypeValidator
+    warned::Bool
+    EvilTypeValidator(;suppresswarning=false) = new(suppresswarning)
+end
 name(::EvilTypeValidator) = "Evil"
-validate(validator::EvilTypeValidator, str::AbstractString) = true
+function validate(validator::EvilTypeValidator, str::AbstractString)
+    if !validator.warned
+        @warn "EvilTypeValidator is not secure, do not use it for untrusted input! To suppress this warning, use TypeParser(EvilTypeValidator(true))"
+        validator.warned = true
+    end
+    return true
+end
 
 const evil = EvilTypeValidator()
 
@@ -35,6 +44,6 @@ function parsetype(parser::TypeParser{TValidator}, str::AbstractString, modulena
     return eval(Meta.parse(fullname))
 end
 
-export TypeParser, parsetype, strict, parametric, loose, RegexValidator, name, validate, evil
+export TypeParser, parsetype, strict, parametric, loose, RegexValidator, name, validate, evil, EvilTypeValidator
 
 end
