@@ -24,6 +24,8 @@ julia> array = parsedtype()
 0-element Array{Int64,1}
 ```
 
+You can also pass a module as the second argument.
+
 # Contributing
 
 Contributions are welcome!

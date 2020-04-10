@@ -9,11 +9,11 @@ is_valid_type_ex(::Symbol) = true
 is_valid_type_ex(::Int) = true
 is_valid_type_ex(e::Expr) = (e.head == :curly || e.head == :tuple || e.head == :.) && all(map(is_valid_type_ex, e.args))
 
-function parsetype(s::String)::Type
+function parsetype(s::String, m::Module=Main)::Type
     try
         parsed = Meta.parse(s)
         if is_valid_type_ex(parsed) 
-            evaled = eval(parsed)
+            evaled = Core.eval(m, parsed)
             evaled isa Type && return evaled
         end
     catch e
